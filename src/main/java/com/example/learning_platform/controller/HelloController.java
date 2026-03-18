@@ -1,4 +1,4 @@
-package com.example.learning_platform;
+package com.example.learning_platform.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
