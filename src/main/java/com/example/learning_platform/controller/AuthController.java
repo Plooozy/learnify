@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,7 +20,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserRegistrationDto userData) {
+    public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDto userData) {
         try {
             userService.registerUser(userData);
             return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
