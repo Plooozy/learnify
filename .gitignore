@@ -1,45 +1,36 @@
-HELP.md
+# --- Java & Maven ---
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+mvnw
+mvnw.cmd
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# --- IntelliJ IDEA ---
+.idea/
 *.iml
-*.ipr
+out/
+gen/
+.metadata/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# --- Frontend (React) ---
+# Игнорируем саму папку с библиотеками (те самые 4000+ файлов)
+frontend/node_modules/
+# Игнорируем папку сборки
+frontend/dist/
+# Локальные переменные окружения
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+# Логи ошибок npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-### VS Code ###
-.vscode/
-
-# Environment files
-.env
-*.env.local
-
-# Log files
-*.log
-logs/
-
-# OS files
+# --- System Files ---
 .DS_Store
 Thumbs.db
+.github/

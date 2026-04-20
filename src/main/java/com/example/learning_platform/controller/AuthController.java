@@ -4,12 +4,15 @@ import com.example.learning_platform.dto.UserLoginDto;
 import com.example.learning_platform.dto.UserRegistrationDto;
 import com.example.learning_platform.model.User;
 import com.example.learning_platform.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,23 +24,18 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDto userData) {
-        try {
-            userService.registerUser(userData);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        userService.registerUser(userData);
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody UserLoginDto loginData) {
         User user = userService.findByUsername(loginData.getUsername());
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+
+        if (user == null || !passwordEncoder.matches(loginData.getPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Invalid username or password");
         }
-        if (passwordEncoder.matches(loginData.getPassword(), user.getPasswordHash())) {
-            return ResponseEntity.ok("Login successful");
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
+
+        return ResponseEntity.ok("Login successful");
     }
 }

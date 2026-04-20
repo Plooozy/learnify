@@ -19,8 +19,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
@@ -42,7 +41,7 @@ class AuthControllerTest {
     void register_Success() throws Exception {
         UserRegistrationDto dto = new UserRegistrationDto();
         dto.setUsername("nick");
-        dto.setPassword("12345");
+        dto.setPassword("123456");
 
         when(userService.registerUser(any())).thenReturn(new User());
 
@@ -59,7 +58,7 @@ class AuthControllerTest {
     void register_UsernameAlreadyExists() throws Exception {
         UserRegistrationDto dto = new UserRegistrationDto();
         dto.setUsername("nick");
-        dto.setPassword("12345");
+        dto.setPassword("123456");
 
         when(userService.registerUser(any())).thenThrow(new RuntimeException("Username already exists"));
 
@@ -68,7 +67,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Username already exists"));
+                .andExpect(jsonPath("$.message").value("Username already exists")); // Проверяем поле message в JSON
     }
 
     @Test
@@ -76,14 +75,14 @@ class AuthControllerTest {
     void login_Success() throws Exception {
         UserLoginDto dto = new UserLoginDto();
         dto.setUsername("nick");
-        dto.setPassword("12345");
+        dto.setPassword("123456");
 
         User user = new User();
         user.setUsername("nick");
         user.setPasswordHash("hashedPassword");
 
         when(userService.findByUsername("nick")).thenReturn(user);
-        when(passwordEncoder.matches("12345", "hashedPassword")).thenReturn(true);
+        when(passwordEncoder.matches("123456", "hashedPassword")).thenReturn(true);
 
         mockMvc.perform(post("/api/auth/login")
                         .with(csrf())
@@ -98,7 +97,7 @@ class AuthControllerTest {
     void login_UserNotFound() throws Exception {
         UserLoginDto dto = new UserLoginDto();
         dto.setUsername("unknown");
-        dto.setPassword("12345");
+        dto.setPassword("123456");
 
         when(userService.findByUsername("unknown")).thenReturn(null);
 
@@ -106,8 +105,8 @@ class AuthControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("User not found"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid username or password"));
     }
 
     @Test
@@ -128,7 +127,21 @@ class AuthControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Invalid password"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid username or password"));
+    }
+
+    @Test
+    @WithMockUser
+    void register_InvalidInput_ReturnsBadRequest() throws Exception {
+        UserRegistrationDto invalidDto = new UserRegistrationDto();
+        invalidDto.setUsername("");
+        invalidDto.setPassword("123");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest());
     }
 }
