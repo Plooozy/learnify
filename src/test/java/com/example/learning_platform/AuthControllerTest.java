@@ -1,10 +1,12 @@
 package com.example.learning_platform;
 
 import com.example.learning_platform.controller.AuthController;
+import com.example.learning_platform.dto.AuthResponseDto;
 import com.example.learning_platform.dto.UserLoginDto;
 import com.example.learning_platform.dto.UserRegistrationDto;
 import com.example.learning_platform.model.User;
 import com.example.learning_platform.service.UserService;
+import com.example.learning_platform.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @Test
     @WithMockUser
@@ -83,13 +88,15 @@ class AuthControllerTest {
 
         when(userService.findByUsername("nick")).thenReturn(user);
         when(passwordEncoder.matches("123456", "hashedPassword")).thenReturn(true);
+        when(jwtUtil.generateToken("nick")).thenReturn("test-jwt-token");
 
         mockMvc.perform(post("/api/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Login successful"));
+                .andExpect(jsonPath("$.token").value("test-jwt-token"))
+                .andExpect(jsonPath("$.username").value("nick"));
     }
 
     @Test

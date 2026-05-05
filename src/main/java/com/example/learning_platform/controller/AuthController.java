@@ -1,9 +1,11 @@
 package com.example.learning_platform.controller;
 
+import com.example.learning_platform.dto.AuthResponseDto;
 import com.example.learning_platform.dto.UserLoginDto;
 import com.example.learning_platform.dto.UserRegistrationDto;
 import com.example.learning_platform.model.User;
 import com.example.learning_platform.service.UserService;
+import com.example.learning_platform.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ public class AuthController {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDto userData) {
@@ -29,13 +32,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserLoginDto loginData) {
+    public ResponseEntity<AuthResponseDto> login(@RequestBody UserLoginDto loginData) {
         User user = userService.findByUsername(loginData.getUsername());
 
         if (user == null || !passwordEncoder.matches(loginData.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid username or password");
         }
 
-        return ResponseEntity.ok("Login successful");
+        String token = jwtUtil.generateToken(user.getUsername());
+        return ResponseEntity.ok(new AuthResponseDto(token, user.getUsername()));
     }
 }

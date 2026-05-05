@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [message, setMessage] = useState('');
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -11,11 +14,17 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const response = await axios.post('http://localhost:8080/api/auth/login', formData);
-            setMessage(response.data); // "Login successful"
-        } catch (error) {
-            setMessage(error.response?.data?.message || "Login failed");
+        setMessage('');
+
+        const result = await login(formData.username, formData.password);
+
+        if (result.success) {
+            setMessage('Вход выполнен успешно!');
+            setTimeout(() => {
+                navigate('/chat');
+            }, 1000);
+        } else {
+            setMessage(result.error);
         }
     };
 
@@ -27,7 +36,7 @@ const Login = () => {
                 <input type="password" name="password" placeholder="Пароль" onChange={handleChange} /><br/><br/>
                 <button type="submit">Войти</button>
             </form>
-            {message && <p>{message}</p>}
+            {message && <p style={{ color: message.includes('успешно') ? 'green' : 'red' }}>{message}</p>}
         </div>
     );
 };

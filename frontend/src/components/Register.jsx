@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -7,6 +8,8 @@ const Register = () => {
         password: ''
     });
     const [message, setMessage] = useState('');
+    const { register, login } = useAuth();
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -14,12 +17,23 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const response = await axios.post('http://localhost:8080/api/auth/register', formData);
-            setMessage(response.data); // "User registered successfully"
-        } catch (error) {
-            const errorMsg = error.response?.data?.message || "Registration failed";
-            setMessage(errorMsg);
+        setMessage('');
+
+        const result = await register(formData.username, formData.password);
+
+        if (result.success) {
+            setMessage('Регистрация выполнена успешно! Выполняется вход...');
+
+            setTimeout(async () => {
+                const loginResult = await login(formData.username, formData.password);
+                if (loginResult.success) {
+                    navigate('/chat');
+                } else {
+                    setMessage('Регистрация успешна, но не удалось выполнить автоматический вход. Пожалуйста, войдите вручную.');
+                }
+            }, 1000);
+        } else {
+            setMessage(result.error);
         }
     };
 
@@ -40,7 +54,7 @@ const Register = () => {
                 <button type="submit">Зарегистрироваться</button>
             </form>
 
-            {message && <p style={{ color: message.includes('success') ? 'green' : 'red' }}>{message}</p>}
+            {message && <p style={{ color: message.includes('успешно') ? 'green' : 'red' }}>{message}</p>}
         </div>
     );
 };
